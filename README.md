@@ -23,7 +23,7 @@ git clone  https://github.com/OpenGenus/tool.git
 cd tool
 pip install -r requirements.txt
 ```
-
+Or use pip3 see [here](https://stackoverflow.com/questions/52120207/how-to-set-running-python-as-pyhton3-6-in-ubuntu/52120250#52120250)
 
 
 ### Install other dependencies
