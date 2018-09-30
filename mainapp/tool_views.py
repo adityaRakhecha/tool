@@ -24,6 +24,7 @@ import pdfkit
 import sys
 from django.core.files.storage import FileSystemStorage
 import time
+import cv2 as cv
 
 
 
@@ -69,6 +70,31 @@ def convert_file(request):
 
         return HttpResponse('Error while converting', status=404)
 
+def convert_image(request):
+    if request.method=='POST':
+        image_to_convert = request.FILES.get('image')
+        convert_to = request.POST.get('convert_to')
+
+        filename, ext = os.path.splitext(image_to_convert.name)
+        outputfile_name = '{0}.{1}'.format(filename, convert_to)
+        input_file_path = os.path.join(settings.MEDIA_ROOT, 'cartoonify/input', image_to_convert.name)
+        output_file_path = os.path.join(settings.MEDIA_ROOT, 'cartoonify/output', outputfile_name)
+        path = default_storage.save(input_file_path, ContentFile(image_to_convert.read()))
+
+        inpImage = cv.imread(input_file_path,1)
+        inpImage2 = inpImage
+        imgBilFilter = cv.bilateralFilter(inpImage2, 9,9,7)
+        imgGray = cv.cvtColor(imgBilFilter, cv.COLOR_RGB2GRAY)
+        imgfilter = cv.medianBlur(imgGray, 5)
+        imgEdge = cv.adaptiveThreshold(imgfilter, 255, cv.ADAPTIVE_THRESH_MEAN_C,
+                                            cv.THRESH_BINARY, 9, 2);
+        imgColored = cv.cvtColor(imgEdge, cv.COLOR_GRAY2RGB)
+        imgFinal = cv.bitwise_and(inpImage, imgColored)
+        cv.imwrite(settings.MEDIA_ROOT+"/cartoonify/output/convertedImg.png", imgFinal)
+        return render(request,'tools/image_tools/cartoonify_output.html', {'input_file': input_file_path, 
+           'output_file': settings.MEDIA_ROOT+"/cartoonify/output/convertedImg.png"})
+        
+    return HttpResponse('Error while converting', status=404)
 
 def jpg_to_png(request):
     if request.method=="POST":
